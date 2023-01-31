@@ -1,4 +1,3 @@
-##  /home/hanwooseok/raisim_ws/raisimLib/raisimUnity/linux/raisimUnity.x86_64
 import os
 import numpy as np
 import raisimpy as raisim
@@ -31,47 +30,47 @@ def worldSetting():
 
     # add wall for contact simulation
     wall=world.addBox(0.1, 1.60, 1.0, 100)
-    wall.setPosition(0.55, -0.0, 0.6/2.0)  # 
+    wall.setPosition(0.65, -0.0, 0.6/2.0)  #
 
     # trajectroy line
     global refLine
     refLine=server.addVisualPolyLine("refLine")
     refLine.setColor(1,0,0,1)
-    
+
 
 def robotSetting():
     global mcl, non_linearities, mcl_dof
 
     # URDF
-    mcl_urdf_file = "/home/ubuntu/raisim_ws/raisimLib/rsc/MCL_3DOF_2/MCL_3DOF/urdf/lab_3dof (plus_ball).urdf"
-       
-    
+    mcl_urdf_file = "/home/ubuntu/raisim_ws/raisimLib/rsc/MCL_ROBOT/urdf/MCL_3DOF.urdf"
+
+
     # manipulator configuration
     mcl = world.addArticulatedSystem(mcl_urdf_file)
     mcl.setName("mcl")
     # mcl_nominal_joint_config = np.array([0.0,0,0])
-    mcl_nominal_joint_config = np.array([0.0, 0.22, 1.4])
+    mcl_nominal_joint_config = np.array([0.0, 0.1, 0.1])
     mcl.setGeneralizedCoordinate(mcl_nominal_joint_config)
     mcl_dof=mcl.getDOF()
-    
+
 
     # Print body and frame names
     print("Body name in order:")
     mcl.printOutBodyNamesInOrder()
     print("\nFrame name in order:")
-    mcl.printOutFrameNamesInOrder() 
+    mcl.printOutFrameNamesInOrder()
 
 def variableInitialization():
-    
+
 
     ##################### system variable #####################
     global sim_time_idx,t,idx,RAD_TO_DEG,DEG_TO_RAD
-    sim_time_idx=int(sim_time*(fs))    
+    sim_time_idx=int(sim_time*(fs))
     t=0.0
     idx=0
     DEG_TO_RAD=np.pi/180
     RAD_TO_DEG=180/np.pi
-    
+
     ##################### robot variable #####################
     global mass_matrix,inv_mass_matrix,nonlinear_matrix,nonlinear_joint
     mass_matrix=np.zeros((mcl_dof,mcl_dof),dtype=np.float64)
@@ -92,10 +91,10 @@ def variableInitialization():
     des_acc=np.zeros((mcl_dof),dtype=np.float64)
     ee_pos=np.zeros((mcl_dof,2),dtype=np.float64)
     command_torque=np.zeros((mcl_dof),dtype=np.float64)
-    
+
     global p_gain,d_gain
     p_gain = np.array([0.0, 0.0, 0.0])
-    d_gain = np.array([0.0, 0.0, 0.0])  
+    d_gain = np.array([0.0, 0.0, 0.0])
 
     # DOB
     global est_d
@@ -110,14 +109,14 @@ def variableInitialization():
 
     ##################### trajectroy #####################
     global a0, a1, a2, a3, init_pos,init_vel,final_pos,final_vel,traj_pos,traj_vel,traj_acc
-    a0=np.zeros((3),dtype=np.float64) 
-    a1=np.zeros((3),dtype=np.float64)  
-    a2=np.zeros((3),dtype=np.float64)  
+    a0=np.zeros((3),dtype=np.float64)
+    a1=np.zeros((3),dtype=np.float64)
+    a2=np.zeros((3),dtype=np.float64)
     a3=np.zeros((3),dtype=np.float64)
-    init_pos=np.zeros((3),dtype=np.float64) 
-    final_pos=np.zeros((3),dtype=np.float64) 
+    init_pos=np.zeros((3),dtype=np.float64)
+    final_pos=np.zeros((3),dtype=np.float64)
     init_vel=np.zeros((3),dtype=np.float64)
-    final_vel=np.zeros((3),dtype=np.float64) 
+    final_vel=np.zeros((3),dtype=np.float64)
     traj_pos=np.zeros((3,sim_time_idx),dtype=np.float64)
     traj_vel=np.zeros((3,sim_time_idx),dtype=np.float64)
     traj_acc=np.zeros((3,sim_time_idx),dtype=np.float64)
@@ -125,9 +124,9 @@ def variableInitialization():
 
     ##################### data variable #####################
     # system
-    global data_time 
+    global data_time
     data_time=np.zeros((sim_time_idx),dtype=np.float64)
-    
+
     # robot
     global data_nonlinear_joint
     data_nonlinear_joint=np.zeros((mcl_dof,sim_time_idx),dtype=np.float64)
@@ -141,7 +140,7 @@ def variableInitialization():
     data_des_pos=np.zeros((mcl_dof,sim_time_idx),dtype=np.float64)
     data_ee_pos=np.zeros((mcl_dof,sim_time_idx),dtype=np.float64)
     data_command_torque=np.zeros((mcl_dof,sim_time_idx),dtype=np.float64)
-    
+
     global desired_force
     desired_force=np.array([10.0, 0.0, 0.0],dtype=np.float64)
 
@@ -157,10 +156,10 @@ def variableInitialization():
 
 def trajectory():
     global traj_pos,traj_vel,traj_acc
-        
+
     # initial condition
-    init_pos[:]=[0.4,0.0,0.7]
-    final_pos[:]=[0.6,0.0,0.7]
+    init_pos[:]=[0.5,0.0,0.7]
+    final_pos[:]=[0.7,0.0,0.7]
     init_vel[:]=[0.0,0.0,0.0]
     final_vel[:]=[0.0,0.0,0.0]
     final_time=sim_time/2
@@ -171,7 +170,7 @@ def trajectory():
     a1=init_vel
     a2 = 3*(final_pos-init_pos)/(final_time**2) - 2/final_time*init_vel - 1/final_time*final_vel
     a3 = -2*(final_pos-init_pos)/(final_time**3) + 1/(final_time**2)*(init_vel+final_vel)
-    
+
     traj_pos[0,:len(traj_time)] = a0[0] + a1[0]*traj_time[:] + a2[0]*traj_time[:]**2 + a3[0]*traj_time[:]**3
     traj_pos[1,:len(traj_time)] = a0[1] + a1[1]*traj_time + a2[1]*traj_time**2 + a3[1]*traj_time**3
     traj_pos[2,:len(traj_time)] = a0[2] + a1[2]*traj_time + a2[2]*traj_time**2 + a3[2]*traj_time**3
@@ -183,9 +182,9 @@ def trajectory():
     traj_acc[2,:len(traj_time)] = 2*a2[2] + 6*a3[2]*traj_time
 
     # maintain final position
-    traj_pos[0,len(traj_time):len(traj_pos[0,])]=final_pos[0]    
-    traj_pos[1,len(traj_time):len(traj_pos[0,])]=final_pos[1]    
-    traj_pos[2,len(traj_time):len(traj_pos[0,])]=final_pos[2]    
+    traj_pos[0,len(traj_time):len(traj_pos[0,])]=final_pos[0]
+    traj_pos[1,len(traj_time):len(traj_pos[0,])]=final_pos[1]
+    traj_pos[2,len(traj_time):len(traj_pos[0,])]=final_pos[2]
 
     # trajectroy line
     for i in range(sim_time_idx):
@@ -204,7 +203,7 @@ def dataUpdate():
 
 def jointPositionControl():
     global cur_ang, des_ang, command_torque, nonlinear_joint
-    
+
     p_gain = np.array([150, 150, 150])
     d_gain = np.array([10, 10, 10])
     des_ang=[-0*DEG_TO_RAD, 0*DEG_TO_RAD, 0*DEG_TO_RAD]
@@ -214,16 +213,15 @@ def jointPositionControl():
     nonlinear_joint = mcl.getNonlinearities()
 
     # input torque
-    mcl.setGeneralizedForce(command_torque+nonlinear_joint)    
+    mcl.setGeneralizedForce(command_torque+nonlinear_joint)
 
 def cartesianImpedanceControl():
     global ee_pos, des_pos,prev_jacobian,est_d,nonlinear_joint,command_torque
-    
-    
-    p_gain[:] = [50, 450, 450]
+
+
+    p_gain[:] = [500, 500, 500]
     d_gain[:] = [20, 20, 20]
     jacobian = mcl.getDenseFrameJacobian("joint_ee_tip")
-    jacobian_dot=control.derivativeOfMat(Ts,prev_jacobian,jacobian)
     prev_jacobian=jacobian
 
     # task space PD control
@@ -235,12 +233,12 @@ def cartesianImpedanceControl():
 
     # nonlinear term
     nonlinear_joint = mcl.getNonlinearities([0,0,-9.81])
-    
+
     # set external force
     # mcl.setExternalForce(3,[0,0,0.3],[0,1*np.sin(np.pi*2*0.1*t),0])
 
-    mcl.setGeneralizedForce(command_torque+nonlinear_joint)     
-  
+    mcl.setGeneralizedForce(command_torque+nonlinear_joint)
+
 def forceControl():
     global ee_pos, des_pos,prev_jacobian,est_d,nonlinear_joint,command_torque,error
     # desired cartesian position
@@ -248,9 +246,9 @@ def forceControl():
     p_gain[:] = [20, 20, 20]
     d_gain[:] = [0, 0, 0]
     jacobian = mcl.getDenseFrameJacobian("joint_ee_tip")
-    
+
     command_torque[:],error=control.forceControl(mcl,Ts,p_gain,d_gain,desired_force,filtered_contact_force[:,0],jacobian)
-    
+
     x = kinematics.eePosition(mcl)
     ee_pos[:,0]=x[:3]
 
@@ -273,7 +271,7 @@ def isContact():
 
     else :
         contact_force[:,0]=[0.0,0.0,0.0]
-        filtered_contact_force[:,0]=[0.0,0.0,0.0]        
+        filtered_contact_force[:,0]=[0.0,0.0,0.0]
 
 
 def saveData():
@@ -282,7 +280,7 @@ def saveData():
         data_time[i]=t
         data_l_ang[:,i]=cur_ang
         data_m_tor[:,i]=command_torque
-            
+
     elif mode =="cartesian_impedance":
         data_time[i]=t
         data_contact_force[:,i]=-filtered_contact_force[:,0]
@@ -320,8 +318,8 @@ def saveToFile():
 
 def plotGraph():
     myPlot.plot3(1,data_time,data_contact_force,data_contact_force,'Contact Force of End Effector','time[s]',["x[N]","y[N]","z[N]"],["contact_force","desired_force"])
-    myPlot.plot3(2,data_time,data_ee_pos,data_des_pos,'Trajectory of End Effector','time [s]',["x[m]","y[m]","z[m]"],["current","desired"])   
-    myPlot.plot3(3,data_time,data_est_distub,data_est_distub,'d hat','time [s]',["","",""],["",""])   
+    myPlot.plot3(2,data_time,data_ee_pos,data_des_pos,'Trajectory of End Effector','time [s]',["x[m]","y[m]","z[m]"],["current","desired"])
+    myPlot.plot3(3,data_time,data_est_distub,data_est_distub,'d hat','time [s]',["","",""],["",""])
     plt.show()
 
 
@@ -358,7 +356,7 @@ if __name__ == "__main__":
 
         elif mode == "cartesian_impedance":
             cartesianImpedanceControl()
-        
+
         elif mode =="force_control":
             forceControl()
 
@@ -368,18 +366,14 @@ if __name__ == "__main__":
 
         world.integrate()
 
-        # satisfied in saimpling time 
         if calculation_time<Ts:
             cnt+=1
             time.sleep(Ts-calculation_time)
-        if calculation_time>Ts:
-            print("Calculation time(",calculation_time,") over Ts(",Ts,")")
 
-        
     ################################### CONTROL LOOP END #########################################
 
     saveToFile()
-    
+
     plotGraph()
 
     print("   SIMULATION END    ")
